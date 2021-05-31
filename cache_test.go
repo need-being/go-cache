@@ -79,7 +79,7 @@ func TestCacheConcurrentSet(t *testing.T) {
 	}
 }
 
-func TestCacheConcurrentGet(t *testing.T) {
+func TestCacheConcurrentGetHit(t *testing.T) {
 	c := New()
 	const n = 1000
 	for i := 0; i < n; i++ {
@@ -97,6 +97,23 @@ func TestCacheConcurrentGet(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, i) {
 				t.Errorf("cache.Get() got = %v, want %v", got, i)
+			}
+		}(i)
+	}
+	wg.Wait()
+}
+
+func TestCacheConcurrentGetMiss(t *testing.T) {
+	c := New()
+	const n = 1000
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			_, found := c.Get(strconv.Itoa(i))
+			if found {
+				t.Errorf("cache.Get() found = %v, want %v", found, false)
 			}
 		}(i)
 	}
@@ -182,4 +199,28 @@ func TestCacheTTL(t *testing.T) {
 	if found {
 		t.Errorf("cache.Get(\"bar\") found = %v, want %v", found, false)
 	}
+}
+
+func benchmarkCacheSet(b *testing.B, n int) {
+	c := New()
+	for i := 0; i < n; i++ {
+		c.Set(strconv.Itoa(i), i, time.Hour)
+	}
+
+	b.ResetTimer()
+	for t := 0; t < b.N; t++ {
+		c.Set("one", 1, time.Hour)
+	}
+}
+
+func BenchmarkCacheSet100(b *testing.B) {
+	benchmarkCacheSet(b, 100)
+}
+
+func BenchmarkCacheSet1000(b *testing.B) {
+	benchmarkCacheSet(b, 1000)
+}
+
+func BenchmarkCacheSet10000(b *testing.B) {
+	benchmarkCacheSet(b, 10000)
 }
