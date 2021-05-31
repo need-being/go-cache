@@ -208,7 +208,7 @@ func benchmarkCacheSet(b *testing.B, n int) {
 	}
 
 	b.ResetTimer()
-	for t := 0; t < b.N; t++ {
+	for i := 0; i < b.N; i++ {
 		c.Set("one", 1, time.Hour)
 	}
 }
@@ -223,4 +223,52 @@ func BenchmarkCacheSet1000(b *testing.B) {
 
 func BenchmarkCacheSet10000(b *testing.B) {
 	benchmarkCacheSet(b, 10000)
+}
+
+func benchmarkCacheGetHit(b *testing.B, n int) {
+	c := New()
+	for i := 0; i < n; i++ {
+		c.Set(strconv.Itoa(i), i, time.Hour)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.Get("0")
+	}
+}
+
+func BenchmarkCacheGetHit100(b *testing.B) {
+	benchmarkCacheGetHit(b, 100)
+}
+
+func BenchmarkCacheGetHit1000(b *testing.B) {
+	benchmarkCacheGetHit(b, 1000)
+}
+
+func BenchmarkCacheGetHit10000(b *testing.B) {
+	benchmarkCacheGetHit(b, 10000)
+}
+
+func benchmarkCacheGetMiss(b *testing.B, n int) {
+	c := New()
+	for i := 0; i < n; i++ {
+		c.Set(strconv.Itoa(i), i, time.Hour)
+	}
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		c.Get("-")
+	}
+}
+
+func BenchmarkCacheGetMiss100(b *testing.B) {
+	benchmarkCacheGetMiss(b, 100)
+}
+
+func BenchmarkCacheGetMiss1000(b *testing.B) {
+	benchmarkCacheGetMiss(b, 1000)
+}
+
+func BenchmarkCacheGetMiss10000(b *testing.B) {
+	benchmarkCacheGetMiss(b, 10000)
 }
